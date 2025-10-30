@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: '0 6 * * *'  # täglich 06:00 UTC
 
+permissions:
+  contents: write   # <--- wichtig! erlaubt dem Workflow, in das Repo zu pushen
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
@@ -12,6 +15,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # <--- sicherstellen, dass der Token mit Schreibrechten verwendet wird
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -35,3 +40,5 @@ jobs:
           git add docs/data/*.csv
           git commit -m "Automated boxscore update" || echo "No changes to commit"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # <--- wichtig für Auth beim Push
