@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 import pandas as pd
+from io import StringIO
 import os
 
 # --- Einstellungen ---
@@ -7,7 +8,7 @@ url = "https://nbbl-basketball.de/jbbl/matches/2003550?status=0"
 save_dir = os.path.join("docs", "data")
 os.makedirs(save_dir, exist_ok=True)
 
-file_path = os.path.join(save_dir, "boxscore_2003550.xlsx")
+file_path = os.path.join(save_dir, "boxscore_2003550.csv")
 
 # --- Playwright starten ---
 with sync_playwright() as p:
@@ -20,19 +21,33 @@ with sync_playwright() as p:
     count = tables.count()
 
     if count == 0:
-        print("❌ Keine Tabellen gefunden – evtl. Seite noch nicht geladen.")
+        print("❌ Keine Tabellen gefunden – evtl. Seite wird dynamisch geladen.")
         browser.close()
         raise SystemExit()
 
-    writer = pd.ExcelWriter(file_path, engine="openpyxl")
+    all_dfs = []
 
     for i in range(count):
         html = tables.nth(i).inner_html()
-        df = pd.read_html("<table>" + html + "</table>")[0]
-        sheet_name = f"Tabelle_{i + 1}"
-        df.to_excel(writer, sheet_name=sheet_name, index=False)
+        # StringIO nutzen, damit kein lxml nötig ist
+        df = pd.read_html(StringIO("<table>" + html + "</table>"))[0]
 
-    writer.close()
+        # Optional: Teamname aus Überschrift ermitteln
+        try:
+            heading = page.locator("h2").nth(i).inner_text()
+        except:
+            heading = f"Team_{i + 1}"
+
+        df.insert(0, "Team", heading)
+        all_dfs.append(df)
+
     browser.close()
 
-print(f"✅ Boxscores gespeichert unter: {file_path}")
+# --- Alle Tabellen kombinieren ---
+df_all = pd.concat(all_dfs, ignore_index=True)
+
+# --- CSV speichern ---
+df_all.to_csv(file_path, index=False, encoding="utf-8-sig")
+
+print(f"✅ Boxscores gespeichert als CSV:\n{file_path}")
+print(f"📊 Tabellen zusammengeführt: {len(all_dfs)} | Zeilen: {len(df_all)}")
