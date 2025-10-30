@@ -1,1 +1,1 @@
-# basketball
+# Scouting Basketball (NBBL und JBBL)
