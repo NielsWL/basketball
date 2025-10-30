@@ -4,7 +4,9 @@ import os
 
 # --- Einstellungen ---
 url = "https://nbbl-basketball.de/jbbl/matches/2003550?status=0"
-save_dir = r"H:\Python\basketball"
+save_dir = os.path.join("docs", "data")
+os.makedirs(save_dir, exist_ok=True)
+
 file_path = os.path.join(save_dir, "boxscore_2003550.xlsx")
 
 # --- Playwright starten ---
@@ -33,4 +35,4 @@ with sync_playwright() as p:
     writer.close()
     browser.close()
 
-print(f"✅ Boxscores gespeichert unter:\n{file_path}")
+print(f"✅ Boxscores gespeichert unter: {file_path}")
