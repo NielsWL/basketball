@@ -1,7 +1,7 @@
 name: Scrape JBBL Boxscore
 
 on:
-  workflow_dispatch:     # manueller Start
+  workflow_dispatch:
   schedule:
     - cron: '0 6 * * *'  # täglich 06:00 UTC
 
@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install playwright pandas openpyxl
+          pip install playwright pandas
           playwright install --with-deps chromium
 
       - name: Run scraper
@@ -32,6 +32,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/data/*.xlsx
-          git commit -m "Automated data update" || echo "No changes to commit"
+          git add docs/data/*.csv
+          git commit -m "Automated boxscore update" || echo "No changes to commit"
           git push
