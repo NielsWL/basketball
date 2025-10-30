@@ -1,0 +1,37 @@
+name: Scrape JBBL Boxscore
+
+on:
+  workflow_dispatch:     # manueller Start
+  schedule:
+    - cron: '0 6 * * *'  # täglich 06:00 UTC
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright pandas openpyxl
+          playwright install --with-deps chromium
+
+      - name: Run scraper
+        run: |
+          python basketball_scraper.py
+
+      - name: Commit scraped data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/data/*.xlsx
+          git commit -m "Automated data update" || echo "No changes to commit"
+          git push
